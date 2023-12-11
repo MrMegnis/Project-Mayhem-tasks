@@ -10,37 +10,10 @@ services:
       POSTGRES_PASSWORD: "boba"
       PGDATA: "/postgresql/data/pgdata"
     volumes:
-      - ../2. Init Database:/docker-entrypoint-initdb.d
-      - mayhem-data:/postgresql/data/
-#      - .:/docker-entrypoint-initdb.d
+      - .:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 4G
-    networks:
-      - postgres
-  pgadmin:
-    container_name: pgadmin_container
-    image: dpage/pgadmin4:7.2
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "aboba@mail.ru"
-      PGADMIN_DEFAULT_PASSWORD: "biba"
-      PGADMIN_CONFIG_SERVER_MODE: "False"
-    volumes:
-      - pgadmin-data:/pgadmin
-    ports:
-      - "5050:80"
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 1G
-    networks:
-      - postgres
+
   tg_bot:
     container_name: tg_bot
     build:
@@ -54,11 +27,3 @@ services:
       - "3000:3000"
     command: >
       /bin/sh -c 'python main.py'
-
-volumes:
-  mayhem-data:
-  pgadmin-data:
-
-networks:
-  postgres:
-    driver: bridge
