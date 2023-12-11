@@ -9,8 +9,15 @@ class Bots:
 
 
 @dataclass
+class Database:
+    path: str
+    board_games: str = 'boardgames'
+
+
+@dataclass
 class Settings:
     bots: Bots
+    database: Database
 
 
 def get_settings(path: str) -> Settings:
@@ -19,5 +26,8 @@ def get_settings(path: str) -> Settings:
     return Settings(
         bots=Bots(
             bot_token=getenv('BOT_TOKEN')
+        ),
+        database=Database(
+            path=f"{getenv('DB_ADAPTER')}://{getenv('DB_USER')}:{getenv('DB_USER_PASSWORD')}@{getenv('DB_HOST')}:{getenv('DB_PORT')}",
         )
     )
