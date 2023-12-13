@@ -33,18 +33,24 @@ class DBWorker:
         return wrapper
 
     @with_session
-    def add_boardgame(self, name: str, description: str = None, max_players: int = None):
+    def add_boardgame(self, name: str, description: str = None, max_players: int = None) -> bool:
+        # True - successfully, False - failed
         if self.get_boardgame(name):
             logger.info(f'Board game is already in the table')
-            return
+            return False
         boardgame = BoardGame(name, description, max_players)
         self.session.add(boardgame)
         self.session.commit()
         logger.info(f'Board game {name} successfully added to database!')
+        return True
 
     @with_session
     def get_boardgame(self, name: str):
         return self.session.query(BoardGame).filter_by(name=name).first()
+
+    @with_session
+    def get_all_boardgames(self):
+        pass
 
     @with_session
     def update_boardgame(self, boardgame_id, description: str, max_players: int):

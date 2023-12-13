@@ -1,38 +1,16 @@
 import asyncio
 
-from aiogram import Bot, Dispatcher
-
-from settings import get_settings
+from aiogram import Dispatcher
 from utils.logger import logger
-
-
-async def start_bot(bot: Bot):
-    pass
-
-
-async def stop_bot(bot: Bot):
-    pass
-
-
-def register_all_handlers(dp: Dispatcher):
-    dp.startup.register(start_bot)
+from bot.handlers.user import bot, rt
 
 
 async def main():
     logger.info('Starting bot')
-
-    settings = get_settings('.env')
-
-    bot = Bot(token=settings.bots.bot_token, parse_mode='HTML')
     dp = Dispatcher()
-
-    register_all_handlers(dp)
-
-    try:
-        await dp.start_polling(bot)
-    finally:
-        await dp.storage.close()
-        await bot.session.close()
+    dp.include_router(rt)
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
 
 if __name__ == '__main__':
