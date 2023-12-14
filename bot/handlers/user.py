@@ -9,11 +9,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.types.reply_keyboard_remove import ReplyKeyboardRemove
 from aiogram.enums.parse_mode import ParseMode
-from utils.database import db_worker
+from utils.database.db_worker import DBWorker
 from utils import keyboards
 
 bot = Bot(token=settings.get_settings('.env').bots.bot_token, parse_mode=ParseMode.HTML)
 rt = Router()
+db_worker = DBWorker()
 
 
 class StateClass(StatesGroup):
@@ -47,7 +48,7 @@ async def handler_help(msg: Message):
 @rt.message(Command('get_all'))
 async def handler_get_all(msg: Message):
     try:
-        games_list = db_worker.DBWorker.get_all_boardgames()
+        games_list = db_worker.get_all_boardgames()
         if len(games_list) == 0:
             await msg.reply('В базе данных пока нет игр')
             return
@@ -87,7 +88,7 @@ async def handler_id_get_state(msg: Message, state: FSMContext):
         if not msg.text.isnumeric():
             await msg.reply('Id должен быть числом!')
         else:
-            game = db_worker.DBWorker.get_boardgame_by_id(int(msg.text))
+            game = db_worker.get_boardgame_by_id(int(msg.text))
             if game is None:
                 await msg.reply('Игры с таким id не существует!')
             else:
@@ -105,7 +106,7 @@ async def handler_id_get_state(msg: Message, state: FSMContext):
 @rt.message(StateFilter(StateClass.get_wait_name))
 async def handler_name_get_state(msg: Message, state: FSMContext):
     try:
-        games = db_worker.DBWorker.get_boardgames_by_extra_fields(name=msg.text)
+        games = db_worker.get_boardgames_by_extra_fields(name=msg.text)
         if len(games) == 0:
             await msg.reply('Игр с таким названием не существует!')
         else:
@@ -149,7 +150,7 @@ async def handler_max_player_state(msg: Message, state: FSMContext):
         try:
             gd = await state.get_data()
             name, desc, mx = gd.get('game_name'), gd.get('game_desc'), msg.text
-            db_worker.DBWorker.add_boardgame(name, desc, mx)
+            db_worker.add_boardgame(name, desc, mx)
             await state.set_state()
         except Exception as _ex:
             await msg.answer('Error!')
@@ -184,7 +185,7 @@ async def handler_id_del_state(msg: Message, state: FSMContext):
         if not msg.text.isnumeric():
             await msg.reply('Id должно быть числом!')
         else:
-            db_worker.DBWorker.remove_boardgame_by_id(int(msg.text))
+            db_worker.remove_boardgame_by_id(int(msg.text))
             await msg.reply('Успешно!')
     except Exception as _ex:
         logging.info(f'ERROR: {_ex}')
@@ -196,7 +197,7 @@ async def handler_id_del_state(msg: Message, state: FSMContext):
 @rt.message(StateFilter(StateClass.del_wait_name))
 async def handler_name_del_state(msg: Message, state: FSMContext):
     try:
-        db_worker.DBWorker.remove_boardgames_by_extra_fields(name=msg.text)
+        db_worker.remove_boardgames_by_extra_fields(name=msg.text)
         await msg.reply('Успешно!')
     except Exception as _ex:
         logging.info(f'ERROR: {_ex}')
