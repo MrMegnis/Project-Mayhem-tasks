@@ -3,7 +3,6 @@ import logging
 import settings
 
 from aiogram import Router, Bot
-from aiogram.filters.state import State, StatesGroup
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
@@ -11,24 +10,11 @@ from aiogram.types.reply_keyboard_remove import ReplyKeyboardRemove
 from aiogram.enums.parse_mode import ParseMode
 from utils.database.db_worker import DBWorker
 from utils import keyboards
+from bot.misc.states import StateClass
 
 bot = Bot(token=settings.get_settings('.env').bots.bot_token, parse_mode=ParseMode.HTML)
 rt = Router()
 db_worker = DBWorker()
-
-
-class StateClass(StatesGroup):
-    add_wait_name = State()
-    add_wait_desc = State()
-    add_wait_max_players = State()
-
-    get_wait_parameter = State()
-    get_wait_id = State()
-    get_wait_name = State()
-
-    del_wait_parameter = State()
-    del_wait_id = State()
-    del_wait_name = State()
 
 
 @rt.message(Command('start'))
