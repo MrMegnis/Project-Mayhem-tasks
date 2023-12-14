@@ -7,60 +7,141 @@ from aiogram.filters.state import State, StatesGroup
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
+from aiogram.types.reply_keyboard_remove import ReplyKeyboardRemove
 from aiogram.enums.parse_mode import ParseMode
 from utils.database import db_worker
+from utils import keyboards
 
 bot = Bot(token=settings.get_settings('.env').bots.bot_token, parse_mode=ParseMode.HTML)
 rt = Router()
 
 
-class AddState(StatesGroup):
-    wait_name = State()
-    wait_desc = State()
-    wait_max_players = State()
+class StateClass(StatesGroup):
+    add_wait_name = State()
+    add_wait_desc = State()
+    add_wait_max_players = State()
+
+    get_wait_parameter = State()
+    get_wait_id = State()
+    get_wait_name = State()
+
+    del_wait_parameter = State()
+    del_wait_id = State()
+    del_wait_name = State()
 
 
 @rt.message(Command('start'))
 async def handler_start(msg: Message):
     await msg.reply('Привет, я бот по настольным играм!')
+    await handler_help(msg)
 
 
 @rt.message(Command('help'))
 async def handler_help(msg: Message):
-    await msg.reply('I can\'t help you')
+    await msg.reply('/get_all - получить все игры\n'
+                    '/get - получить игру по id или названию\n'
+                    '/add - добавить новую игру\n'
+                    '/delete - удалить игру по id или названию')
 
 
 @rt.message(Command('get_all'))
 async def handler_get_all(msg: Message):
-    pass
+    try:
+        games_list = db_worker.DBWorker.get_all_boardgames()
+        if len(games_list) == 0:
+            await msg.reply('В базе данных пока нет игр')
+            return
+        keyboard = keyboards.generate_games_keyboard(games_list, include_name=True)
+        await msg.reply('Список всех игр:\n'
+                        'Для получения подробной информации нажмите на кнопку',
+                        reply_markup=keyboard)
+    except Exception as _ex:
+        logging.info(f'ERROR: {_ex}')
+        await msg.reply('ERROR!')
 
 
 @rt.message(Command('get'))
-async def handler_get(msg: Message):
-    pass
+async def handler_get(msg: Message, state: FSMContext):
+    keyboard = keyboards.generate_id_name_get()
+    await msg.reply('По какому параметру вы хотите получить игру?',
+                    reply_markup=keyboard)
+    await state.set_state(StateClass.get_wait_parameter)
+
+
+@rt.message(StateFilter(StateClass.get_wait_parameter))
+async def handler_get_state(msg: Message, state: FSMContext):
+    if msg.text == 'Id':
+        await msg.reply('Введите Id', reply_markup=ReplyKeyboardRemove())
+        await state.set_state(StateClass.get_wait_id)
+    elif msg.text == 'Название':
+        await msg.reply('Введите название', reply_markup=ReplyKeyboardRemove())
+        await state.set_state(StateClass.get_wait_name)
+    else:
+        await msg.reply('Неправильный параметр!', reply_markup=ReplyKeyboardRemove())
+        await state.set_state()
+
+
+@rt.message(StateFilter(StateClass.get_wait_id))
+async def handler_id_get_state(msg: Message, state: FSMContext):
+    try:
+        if not msg.text.isnumeric():
+            await msg.reply('Id должен быть числом!')
+        else:
+            game = db_worker.DBWorker.get_boardgame_by_id(int(msg.text))
+            if game is None:
+                await msg.reply('Игры с таким id не существует!')
+            else:
+                await msg.reply(f'id: {game.id}\n'
+                                f'Название: {game.name}\n'
+                                f'Описание: {game.description}\n'
+                                f'Максимальное количество игроков: {game.max_players}')
+    except Exception as _ex:
+        logging.info(f'ERROR: {_ex}')
+        await msg.reply('ERROR!')
+    finally:
+        await state.set_state()
+
+
+@rt.message(StateFilter(StateClass.get_wait_name))
+async def handler_name_get_state(msg: Message, state: FSMContext):
+    try:
+        games = db_worker.DBWorker.get_boardgames_by_extra_fields(name=msg.text)
+        if len(games) == 0:
+            await msg.reply('Игр с таким названием не существует!')
+        else:
+            keyboard = keyboards.generate_games_keyboard(games, include_id=True)
+            await msg.reply('Вот id игр с этим именем\n'
+                            'Для получения подробностей нажмите на кнопку',
+                            reply_markup=keyboard)
+
+    except Exception as _ex:
+        logging.info(f'ERROR: {_ex}')
+        await msg.reply('ERROR!')
+    finally:
+        await state.set_state()
 
 
 @rt.message(Command('add'))
 async def handler_add(msg: Message, state: FSMContext):
     await msg.reply('Введите название игры')
-    await state.set_state(AddState.wait_name)
+    await state.set_state(StateClass.add_wait_name)
 
 
-@rt.message(StateFilter(AddState.wait_name))
+@rt.message(StateFilter(StateClass.add_wait_name))
 async def handler_name_state(msg: Message, state: FSMContext):
     await msg.reply('Введите описание игры')
     await state.update_data(game_name=msg.text)
-    await state.set_state(AddState.wait_desc)
+    await state.set_state(StateClass.add_wait_desc)
 
 
-@rt.message(StateFilter(AddState.wait_desc))
+@rt.message(StateFilter(StateClass.add_wait_desc))
 async def handler_desc_state(msg: Message, state: FSMContext):
     await msg.reply('Введите максимальное количество игроков')
     await state.update_data(game_desc=msg.text)
-    await state.set_state(AddState.wait_max_players)
+    await state.set_state(StateClass.add_wait_max_players)
 
 
-@rt.message(StateFilter(AddState.wait_max_players))
+@rt.message(StateFilter(StateClass.add_wait_max_players))
 async def handler_max_player_state(msg: Message, state: FSMContext):
     if not msg.text.isnumeric():
         await msg.reply('Количество игроков должно быть числом! Повторите ввод!')
@@ -68,10 +149,7 @@ async def handler_max_player_state(msg: Message, state: FSMContext):
         try:
             gd = await state.get_data()
             name, desc, mx = gd.get('game_name'), gd.get('game_desc'), msg.text
-            if db_worker.DBWorker.add_boardgame(name, desc, mx):
-                await msg.answer('Успешно добавлено!')
-            else:
-                await msg.answer('Игра уже в таблице!')
+            db_worker.DBWorker.add_boardgame(name, desc, mx)
             await state.set_state()
         except Exception as _ex:
             await msg.answer('Error!')
@@ -80,5 +158,48 @@ async def handler_max_player_state(msg: Message, state: FSMContext):
 
 
 @rt.message(Command('delete'))
-async def handler_delete(msg: Message):
-    pass
+async def handler_delete(msg: Message, state: FSMContext):
+    keyboard = keyboards.generate_id_name_get()
+    await msg.reply('По какому параметру вы хотите удалить игру?',
+                    reply_markup=keyboard)
+    await state.set_state(StateClass.del_wait_parameter)
+
+
+@rt.message(StateFilter(StateClass.del_wait_parameter))
+async def handler_del_state(msg: Message, state: FSMContext):
+    if msg.text == 'Id':
+        await msg.reply('Введите Id', reply_markup=ReplyKeyboardRemove())
+        await state.set_state(StateClass.del_wait_id)
+    elif msg.text == 'Название':
+        await msg.reply('Введите название', reply_markup=ReplyKeyboardRemove())
+        await state.set_state(StateClass.del_wait_name)
+    else:
+        await msg.reply('Неправильный параметр!', reply_markup=ReplyKeyboardRemove())
+        await state.set_state()
+
+
+@rt.message(StateFilter(StateClass.del_wait_id))
+async def handler_id_del_state(msg: Message, state: FSMContext):
+    try:
+        if not msg.text.isnumeric():
+            await msg.reply('Id должно быть числом!')
+        else:
+            db_worker.DBWorker.remove_boardgame_by_id(int(msg.text))
+            await msg.reply('Успешно!')
+    except Exception as _ex:
+        logging.info(f'ERROR: {_ex}')
+        await msg.reply('ERROR!')
+    finally:
+        await state.set_state()
+
+
+@rt.message(StateFilter(StateClass.del_wait_name))
+async def handler_name_del_state(msg: Message, state: FSMContext):
+    try:
+        db_worker.DBWorker.remove_boardgames_by_extra_fields(name=msg.text)
+        await msg.reply('Успешно!')
+    except Exception as _ex:
+        logging.info(f'ERROR: {_ex}')
+        await msg.reply('ERROR!')
+    finally:
+        await state.set_state()
