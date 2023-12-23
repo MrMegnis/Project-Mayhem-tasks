@@ -27,6 +27,6 @@ def get_settings(path: str) -> Settings:
             bot_token=getenv('BOT_TOKEN')
         ),
         database=Database(
-            path=f"{getenv('DB_ADAPTER')}://{getenv('DB_USER')}:{getenv('DB_USER_PASSWORD')}{getenv('DB_HOST')}:{getenv('DB_PORT')}/{getenv('DB_NAME')}",
+            path=f"{getenv('DB_ADAPTER')}://{getenv('DB_USER')}:{getenv('DB_USER_PASSWORD')}@{getenv('DB_HOST')}:{getenv('DB_PORT')}/{getenv('DB_NAME')}",
         )
     )

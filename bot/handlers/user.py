@@ -138,6 +138,7 @@ async def handler_max_player_state(msg: Message, state: FSMContext):
             name, desc, mx = gd.get('game_name'), gd.get('game_desc'), msg.text
             db_worker.add_boardgame(name, desc, mx)
             await state.set_state()
+            await msg.reply('Успешно!')
         except Exception as _ex:
             await msg.answer('Error!')
             await state.set_state()
