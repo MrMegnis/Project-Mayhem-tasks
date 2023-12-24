@@ -19,4 +19,3 @@ async def callbacks(call: CallbackQuery):
                               f'Название: {game.name}\n'
                               f'Описание: {game.description}\n'
                               f'Максимальное количество игроков: {game.max_players}')
-
