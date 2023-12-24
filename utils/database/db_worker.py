@@ -3,7 +3,7 @@ from typing import Type
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
-from utils.database.models.boardgame import BoardGame
+from utils.database.models.boardgame import BoardGame, DeclarativeBase
 from settings import get_settings
 from utils.logger import logger
 
@@ -29,6 +29,7 @@ class DBWorker:
         def wrapper(*args, **kwargs):
             self: DBWorker = args[0]
             self.start_session()
+            DeclarativeBase.metadata.create_all(self.engine)
             res = func(*args, **kwargs)
             self.close_session()
             return res

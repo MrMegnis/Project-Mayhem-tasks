@@ -1,13 +1,17 @@
 import asyncio
 
-from aiogram import Dispatcher
+from aiogram import Dispatcher, Bot
+from aiogram.enums import ParseMode
+
+import settings
 from utils.logger import logger
-from bot.handlers.user import bot, rt
+from bot.handlers.user_handlers import rt
 from bot.handlers.callbacks import callback_router
 
 
 async def main():
     logger.info('Starting bot')
+    bot = Bot(token=settings.get_settings('.env').bots.bot_token, parse_mode=ParseMode.HTML)
     dp = Dispatcher()
     dp.include_routers(rt, callback_router)
     await bot.delete_webhook(drop_pending_updates=True)

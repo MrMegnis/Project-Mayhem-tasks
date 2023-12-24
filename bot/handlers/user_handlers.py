@@ -10,9 +10,9 @@ from aiogram.types.reply_keyboard_remove import ReplyKeyboardRemove
 from aiogram.enums.parse_mode import ParseMode
 from utils.database.db_worker import DBWorker
 from utils import keyboards
-from bot.misc.states import StateClass
+from bot.handlers.states import StateClass
 
-bot = Bot(token=settings.get_settings('.env').bots.bot_token, parse_mode=ParseMode.HTML)
+
 rt = Router()
 db_worker = DBWorker()
 
@@ -50,7 +50,7 @@ async def handler_get_all(msg: Message):
 @rt.message(Command('get'))
 async def handler_get(msg: Message, state: FSMContext):
     keyboard = keyboards.generate_id_name_get()
-    await msg.reply('По какому параметру вы хотите получить игру?',
+    await msg.reply('По какому параметру вы хотите получить игру?\nId/Название',
                     reply_markup=keyboard)
     await state.set_state(StateClass.get_wait_parameter)
 
@@ -148,7 +148,7 @@ async def handler_max_player_state(msg: Message, state: FSMContext):
 @rt.message(Command('delete'))
 async def handler_delete(msg: Message, state: FSMContext):
     keyboard = keyboards.generate_id_name_get()
-    await msg.reply('По какому параметру вы хотите удалить игру?',
+    await msg.reply('По какому параметру вы хотите удалить игру?\nId/Название',
                     reply_markup=keyboard)
     await state.set_state(StateClass.del_wait_parameter)
 
