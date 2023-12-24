@@ -1,16 +1,20 @@
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DeclarativeBase = declarative_base()
+# Task добавьте код создания экземпляра базовой структуры
+DeclarativeBase=# Решение
 
 
 class BoardGame(DeclarativeBase):
+    # Task добавьте код присваивания имени таблицы значение 'boardgames'
     __tablename__ = 'boardgames'
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    description = Column(String)
-    max_players = Column(Integer)
+    # Task добавьте код полей записи: id, целое, primary_key; name, строка; description, строка; max_players, число
+
+    # Решение
+    # Решение
+    # Решение
+    # Решение
 
     def __repr__(self):
         return f'BoardGame(id={self.id}, name={self.name}, description={self.description}, max_players={self.max_players})'

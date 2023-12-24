@@ -12,23 +12,22 @@ from utils.database.db_worker import DBWorker
 from utils import keyboards
 from bot.handlers.states import StateClass
 
-
 rt = Router()
 db_worker = DBWorker()
 
 
 @rt.message(Command('start'))
 async def handler_start(msg: Message):
-    await msg.reply('Привет, я бот по настольным играм!')
+    # Task добавьте код ответа на сообщение с текстом 'Привет, я бот по настольным играм!'
+    # Решение
     await handler_help(msg)
 
 
 @rt.message(Command('help'))
 async def handler_help(msg: Message):
-    await msg.reply('/get_all - получить все игры\n'
-                    '/get - получить игру по id или названию\n'
-                    '/add - добавить новую игру\n'
-                    '/delete - удалить игру по id или названию')
+    answer_text = '/get_all - получить все игры\n/get - получить игру по id или названию\n/add - добавить новую игру\n/delete - удалить игру по id или названию'
+    # Task добавьте код ответа на сообщение с текстом из answer_text
+    # Решение
 
 
 @rt.message(Command('get_all'))
@@ -36,12 +35,13 @@ async def handler_get_all(msg: Message):
     try:
         games_list = db_worker.get_all_boardgames()
         if len(games_list) == 0:
-            await msg.reply('В базе данных пока нет игр')
+            # Task добавьте код ответа на сообщение с текстом 'В базе данных пока нет игр'
+            # Решение
             return
         keyboard = keyboards.generate_games_keyboard(games_list, include_name=True)
-        await msg.reply('Список всех игр:\n'
-                        'Для получения подробной информации нажмите на кнопку',
-                        reply_markup=keyboard)
+        answer_text = 'Список всех игр:\nДля получения подробной информации нажмите на кнопку'
+        # Task добавьте код ответа на сообщение с текстом из answer_text и клавиатурой keyboard
+        # Решение
     except Exception as _ex:
         logging.info(f'ERROR: {_ex}')
         await msg.reply('ERROR!')
@@ -50,22 +50,34 @@ async def handler_get_all(msg: Message):
 @rt.message(Command('get'))
 async def handler_get(msg: Message, state: FSMContext):
     keyboard = keyboards.generate_id_name_get()
-    await msg.reply('По какому параметру вы хотите получить игру?\nId/Название',
-                    reply_markup=keyboard)
-    await state.set_state(StateClass.get_wait_parameter)
+    answer_text = 'Список всех игр:\nДля получения подробной информации нажмите на кнопку'
+    # Task добавьте код ответа на сообщение с текстом из answer_text и клавиатурой keyboard
+    # Решение
+    # Task добавьте код установки состояния на StateClass.get_wait_parameter
+    # Решение
 
 
 @rt.message(StateFilter(StateClass.get_wait_parameter))
 async def handler_get_state(msg: Message, state: FSMContext):
+    pass
     if msg.text == 'Id':
-        await msg.reply('Введите Id', reply_markup=ReplyKeyboardRemove())
-        await state.set_state(StateClass.get_wait_id)
+        pass
+        # Task добавьте код ответа на сообщение с текстом 'Введите Id' и клавиатурой ReplyKeyboardRemove()
+        # Решение
+        # Task добавьте код установки состояния на StateClass.get_wait_id
+        # Решение
     elif msg.text == 'Название':
-        await msg.reply('Введите название', reply_markup=ReplyKeyboardRemove())
-        await state.set_state(StateClass.get_wait_name)
+        pass
+        # Task добавьте код ответа на сообщение с текстом 'Введите название' и клавиатурой ReplyKeyboardRemove()
+        # Решение
+        # Task добавьте код установки состояния на StateClass.get_wait_name
+        # Решение
     else:
-        await msg.reply('Неправильный параметр!', reply_markup=ReplyKeyboardRemove())
-        await state.set_state()
+        pass
+        # Task добавьте код ответа на сообщение с текстом 'Неправильный параметр!' и клавиатурой ReplyKeyboardRemove()
+        # Решение
+        # Task добавьте код установки состояния на начальное
+        # Решение
 
 
 @rt.message(StateFilter(StateClass.get_wait_id))

@@ -32,5 +32,7 @@ def generate_games_keyboard(games: list[Type[boardgame.BoardGame]],
 
 
 def generate_id_name_get() -> ReplyKeyboardMarkup:
-    keyboard = [[KeyboardButton(text='Id'), KeyboardButton(text='Название')]]
-    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+    # Task добавьте код создания массива из 2 кнопок с текстом 'Id' и 'Название'
+    # Решение
+    # Task добавьте код возвращения клавиатуры
+    return # Решение
